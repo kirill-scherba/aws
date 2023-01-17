@@ -33,8 +33,8 @@ type awsLambda struct {
 	*lambda.Client
 }
 
-// NewAws creates AWS S3 and Lambda clients
-func NewAws() (a *Aws, err error) {
+// New creates AWS S3 and Lambda clients
+func New() (a *Aws, err error) {
 
 	a = new(Aws)
 
