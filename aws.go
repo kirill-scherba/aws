@@ -34,7 +34,7 @@ type awsLambda struct {
 }
 
 // New creates AWS S3 and Lambda clients
-func New() (a *Aws, err error) {
+func New(region ...string) (a *Aws, err error) {
 
 	a = new(Aws)
 
@@ -44,6 +44,11 @@ func New() (a *Aws, err error) {
 	if err != nil {
 		err = errors.New("lambda configuration error, " + err.Error())
 		return
+	}
+
+	// Set connections region
+	if len(region) > 0 {
+		cfg.Region = region[0]
 	}
 
 	// Create new Lambda client
