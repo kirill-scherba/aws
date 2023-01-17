@@ -77,8 +77,8 @@ func (a awsLambda) Get(funcName string, request any) (result *lambda.InvokeOutpu
 	return
 }
 
-// GetS3 return content of S3 object
-func (a awsS3) GetS3(bucket, objectName string) (data []byte, err error) {
+// Get return content of S3 object
+func (a awsS3) Get(bucket, objectName string) (data []byte, err error) {
 
 	// Get s3 object
 	rawObject, err := a.Client.GetObject(
@@ -101,8 +101,8 @@ func (a awsS3) GetS3(bucket, objectName string) (data []byte, err error) {
 	return
 }
 
-// SetS3 save S3 object content
-func (a awsS3) SetS3(bucket, objectName string, data []byte) (err error) {
+// Set save S3 object content
+func (a awsS3) Set(bucket, objectName string, data []byte) (err error) {
 
 	buf := bytes.NewReader(data)
 
@@ -115,8 +115,8 @@ func (a awsS3) SetS3(bucket, objectName string, data []byte) (err error) {
 	return
 }
 
-// ListS3 return list of S3 objects keys in folder
-func (a awsS3) ListS3(bucket, prefix string) (keys []string, err error) {
+// List return list of S3 objects keys in folder
+func (a awsS3) List(bucket, prefix string) (keys []string, err error) {
 
 	// Get s3 object
 	listObjects, err := a.Client.ListObjects(
@@ -143,7 +143,7 @@ func (a awsS3) ListS3(bucket, prefix string) (keys []string, err error) {
 }
 
 // listS3 return channel with list of S3 objects keys in folder
-func (a awsS3) ListS3Chan(bucket, prefix string) (ch chan string, err error) {
+func (a awsS3) ListChan(bucket, prefix string) (ch chan string, err error) {
 	ch = make(chan string, 10)
 
 	// Get s3 object
