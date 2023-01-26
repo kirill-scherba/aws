@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -120,13 +121,45 @@ func (a awsS3) Set(bucket, objectName string, data []byte) (err error) {
 	return
 }
 
-// Delete delete S3 object
+// Delete S3 object
 func (a awsS3) Delete(bucket, objectName string) (err error) {
 
 	_, err = a.Client.DeleteObject(a.ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(objectName),
 	})
+
+	return
+}
+
+// Delete S3 folder
+func (a awsS3) DeleteFolder(bucket, folderName string) (err error) {
+
+	// Check folder length and Add slash to folder name
+	l := len(folderName)
+	if l == 0 {
+		return
+	}
+	if folderName[l-1] != '/' {
+		folderName += "/"
+	}
+
+	// Get list objects in folder
+	keys, err := a.List(bucket, folderName)
+	if err != nil {
+		return
+	}
+
+	// Delete all objects in floder
+	for i := len(keys) - 1; i >= 0; i-- {
+		a.Delete(bucket, keys[i])
+	}
+
+	// Remove trailing slash in folder name
+	folderName = strings.TrimRight(folderName, "/")
+
+	// Delete folder
+	a.Delete(bucket, folderName)
 
 	return
 }
