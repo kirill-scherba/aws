@@ -111,10 +111,21 @@ func (a awsS3) Set(bucket, objectName string, data []byte) (err error) {
 
 	buf := bytes.NewReader(data)
 
-	a.Client.PutObject(a.ctx, &s3.PutObjectInput{
+	_, err = a.Client.PutObject(a.ctx, &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(objectName),
 		Body:   buf,
+	})
+
+	return
+}
+
+// Delete delete S3 object
+func (a awsS3) Delete(bucket, objectName string) (err error) {
+
+	_, err = a.Client.DeleteObject(a.ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(objectName),
 	})
 
 	return
