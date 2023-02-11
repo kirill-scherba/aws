@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -43,7 +42,7 @@ func New(region ...string) (a *Aws, err error) {
 	ctx := context.TODO()
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		err = errors.New("lambda configuration error, " + err.Error())
+		err = fmt.Errorf("lambda configuration error, %s", err)
 		return
 	}
 
@@ -67,7 +66,8 @@ func New(region ...string) (a *Aws, err error) {
 func (a awsLambda) Get(funcName string, request any) (result *lambda.InvokeOutput, err error) {
 	payload, err := json.Marshal(request)
 	if err != nil {
-		err = errors.New("error marshalling lambda " + funcName + " request")
+		err = fmt.Errorf("can't marshal lambda %s request, error %s",
+			funcName, err)
 		return
 	}
 
@@ -77,7 +77,7 @@ func (a awsLambda) Get(funcName string, request any) (result *lambda.InvokeOutpu
 		Payload:      payload},
 	)
 	if err != nil {
-		err = errors.New("error calling lambda " + funcName + ": " + err.Error())
+		err = fmt.Errorf("error calling lambda %s: %s", funcName, err)
 	}
 
 	return
@@ -95,7 +95,8 @@ func (a awsS3) Get(bucket, objectName string) (data []byte, err error) {
 		},
 	)
 	if err != nil {
-		fmt.Println("Got an error getting Object " + objectName)
+		err = fmt.Errorf("got an error getting Object %s, error: %s",
+			objectName, err)
 		return
 	}
 
@@ -176,7 +177,10 @@ func (a awsS3) List(bucket, prefix string) (keys []string, err error) {
 		},
 	)
 	if err != nil {
-		fmt.Println("Got an error getting Objects list from bucket: " + prefix)
+		err = fmt.Errorf(
+			"got an error getting Objects list from bucket: %s, error: %s",
+			prefix, err,
+		)
 		return
 	}
 
@@ -204,7 +208,10 @@ func (a awsS3) ListChan(bucket, prefix string) (ch chan string, err error) {
 		},
 	)
 	if err != nil {
-		fmt.Println("Got an error getting Objects list from bucket: " + prefix)
+		err = fmt.Errorf(
+			"got an error getting Objects list from bucket: %s, error: %s",
+			prefix, err,
+		)
 		return
 	}
 
