@@ -247,6 +247,9 @@ func (a awsCognito) Get(userPoolId, sub string) (user *types.UserType, err error
 		UserPoolId: aws.String(userPoolId),
 		Filter:     aws.String("sub^='" + sub + "'"),
 	})
+	if err != nil {
+		return
+	}
 	if len(listUsers.Users) == 0 {
 		err = errors.New("not found")
 		return
