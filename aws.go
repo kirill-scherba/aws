@@ -9,19 +9,23 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 // Aws methods receiver and data structure
 type Aws struct {
-	S3     awsS3
-	Lambda awsLambda
+	S3      awsS3
+	Lambda  awsLambda
+	Cognito awsCognito
 }
 
 type awsS3 struct {
@@ -31,6 +35,10 @@ type awsS3 struct {
 type awsLambda struct {
 	ctx context.Context
 	*lambda.Client
+}
+type awsCognito struct {
+	ctx context.Context
+	*cognitoidentityprovider.Client
 }
 
 // New creates AWS S3 and Lambda clients
@@ -58,6 +66,10 @@ func New(region ...string) (a *Aws, err error) {
 	// Create new S3 client
 	a.S3.ctx = ctx
 	a.S3.Client = s3.NewFromConfig(cfg)
+
+	// Create new Cognito client
+	a.Cognito.ctx = ctx
+	a.Cognito.Client = cognitoidentityprovider.NewFromConfig(cfg)
 
 	return
 }
@@ -225,6 +237,22 @@ func (a awsS3) ListChan(bucket, prefix string) (ch chan string, err error) {
 		}
 		close(ch)
 	}()
+
+	return
+}
+
+// Get returns cognito UserType by userPoolId and sub
+func (a awsCognito) Get(userPoolId, sub string) (user *types.UserType, err error) {
+	listUsers, err := a.Client.ListUsers(a.ctx, &cognitoidentityprovider.ListUsersInput{
+		UserPoolId: aws.String(userPoolId),
+		Filter:     aws.String("sub^='" + sub + "'"),
+	})
+	if len(listUsers.Users) == 0 {
+		err = errors.New("not found")
+		return
+	}
+
+	user = &listUsers.Users[0]
 
 	return
 }
