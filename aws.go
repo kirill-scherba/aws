@@ -241,21 +241,55 @@ func (a awsS3) ListChan(bucket, prefix string) (ch chan string, err error) {
 	return
 }
 
-// Get returns cognito UserType by userPoolId and sub
+// Get retrieves a Cognito UserType by its user pool ID and sub.
+//
+// Parameters:
+// - userPoolId: The ID of the user pool.
+// - sub: Users sub id.
+//
+// Returns:
+// - user: A pointer to the retrieved UserType.
+// - err: An error if the operation fails.
 func (a awsCognito) Get(userPoolId, sub string) (user *types.UserType, err error) {
+	// Call the ListUsers API to retrieve the user from the user pool.
 	listUsers, err := a.Client.ListUsers(a.ctx, &cognitoidentityprovider.ListUsersInput{
+		UserPoolId: aws.String(userPoolId),           // Set the user pool ID.
+		Filter:     aws.String("sub^='" + sub + "'"), // Filter users by sub.
+	})
+	if err != nil {
+		return // Return the error if there was an issue calling the API.
+	}
+
+	// Check if no users were found.
+	if len(listUsers.Users) == 0 {
+		err = errors.New("not found") // Return an error if no user was found.
+		return
+	}
+
+	// Return the first user in the list.
+	user = &listUsers.Users[0]
+
+	return
+}
+
+// EstimatedNumberOfUsers retrieves the estimated number of users in a user pool.
+//
+// Parameters:
+// - userPoolId: The ID of the user pool.
+//
+// Returns:
+// - estimatedNumberOfUsers: The estimated number of users in the user pool.
+// - err: An error if the operation fails.
+func (a awsCognito) EstimatedNumberOfUsers(userPoolId string) (estimatedNumberOfUsers int, err error) {
+	// Call the DescribeUserPool API to get the user pool details.
+	out, err := a.DescribeUserPool(a.ctx, &cognitoidentityprovider.DescribeUserPoolInput{
 		UserPoolId: aws.String(userPoolId),
-		Filter:     aws.String("sub^='" + sub + "'"),
 	})
 	if err != nil {
 		return
 	}
-	if len(listUsers.Users) == 0 {
-		err = errors.New("not found")
-		return
-	}
 
-	user = &listUsers.Users[0]
-
+	// Extract the estimated number of users from the response and return it.
+	estimatedNumberOfUsers = int(out.UserPool.EstimatedNumberOfUsers)
 	return
 }
