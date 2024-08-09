@@ -50,7 +50,7 @@ func New(region ...string) (a *Aws, err error) {
 	ctx := context.TODO()
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		err = fmt.Errorf("lambda configuration error, %s", err)
+		err = fmt.Errorf("aws configuration error, %s", err)
 		return
 	}
 
@@ -107,7 +107,7 @@ func (a awsS3) Get(bucket, objectName string) (data []byte, err error) {
 		},
 	)
 	if err != nil {
-		err = fmt.Errorf("got an error getting Object %s, error: %s",
+		err = fmt.Errorf("got an error getting s3 Object %s, error: %s",
 			objectName, err)
 		return
 	}
@@ -190,7 +190,7 @@ func (a awsS3) List(bucket, prefix string) (keys []string, err error) {
 	)
 	if err != nil {
 		err = fmt.Errorf(
-			"got an error getting Objects list from bucket: %s, error: %s",
+			"got an error getting s3 Objects list from bucket: %s, error: %s",
 			prefix, err,
 		)
 		return
@@ -221,7 +221,7 @@ func (a awsS3) ListChan(bucket, prefix string) (ch chan string, err error) {
 	)
 	if err != nil {
 		err = fmt.Errorf(
-			"got an error getting Objects list from bucket: %s, error: %s",
+			"got an error getting s3 Objects list from bucket: %s, error: %s",
 			prefix, err,
 		)
 		return
@@ -272,7 +272,7 @@ func (a awsCognito) Get(userPoolId, sub string) (user *types.UserType, err error
 	return
 }
 
-// EstimatedNumberOfUsers retrieves the estimated number of users in a user pool.
+// Length retrieves the estimated number of users in a user pool.
 //
 // Parameters:
 // - userPoolId: The ID of the user pool.
@@ -280,16 +280,42 @@ func (a awsCognito) Get(userPoolId, sub string) (user *types.UserType, err error
 // Returns:
 // - estimatedNumberOfUsers: The estimated number of users in the user pool.
 // - err: An error if the operation fails.
-func (a awsCognito) EstimatedNumberOfUsers(userPoolId string) (estimatedNumberOfUsers int, err error) {
+func (a awsCognito) Length(userPoolId string) (
+	estimatedNumberOfUsers int, err error) {
+
 	// Call the DescribeUserPool API to get the user pool details.
-	out, err := a.DescribeUserPool(a.ctx, &cognitoidentityprovider.DescribeUserPoolInput{
-		UserPoolId: aws.String(userPoolId),
-	})
+	out, err := a.DescribeUserPool(a.ctx,
+		&cognitoidentityprovider.DescribeUserPoolInput{
+			UserPoolId: aws.String(userPoolId),
+		},
+	)
 	if err != nil {
 		return
 	}
 
 	// Extract the estimated number of users from the response and return it.
 	estimatedNumberOfUsers = int(out.UserPool.EstimatedNumberOfUsers)
+	return
+}
+
+// List get list of Cognito Users poll.
+func (a awsCognito) List(userPoolId string, limit int, previous *string) (
+	users []types.UserType, pagination *string, err error) {
+
+	// Call the ListUsers API to retrieve the user from the user pool.
+	listUsers, err := a.Client.ListUsers(a.ctx,
+		&cognitoidentityprovider.ListUsersInput{
+			UserPoolId:      aws.String(userPoolId),  // Set the user pool ID.
+			Limit:           aws.Int32(int32(limit)), // Limit the number of users.
+			PaginationToken: previous,                // Set the pagination token.
+		},
+	)
+	if err != nil {
+		return // Return the error if there was an issue calling the API.
+	}
+
+	// Return the list of users and the pagination token.
+	pagination = listUsers.PaginationToken
+	users = listUsers.Users
 	return
 }
