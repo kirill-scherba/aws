@@ -298,6 +298,9 @@ func (a awsCognito) Length(userPoolId string) (
 	return
 }
 
+// A user profile in a Amazon Cognito user pool.
+type UserType = types.UserType
+
 // List retrieves a list of Cognito users from a user pool.
 //
 // Parameters:
@@ -306,31 +309,31 @@ func (a awsCognito) Length(userPoolId string) (
 //
 // limit: The maximum number of users to return.
 //
-// filter: A filter string to limit the users returned. 
+// filter: A filter string to limit the users returned.
 // Quotation marks within the filter string must be escaped using the backslash (\)
 // character. For example, " family_name = \"Reddy\"":
 //
-//     - AttributeName: The name of the attribute to search for. You can only search
+//   - AttributeName: The name of the attribute to search for. You can only search
 //     for one attribute at a time.
-//     - Filter-Type: For an exact match, use =, for example, " given_name =
+//   - Filter-Type: For an exact match, use =, for example, " given_name =
 //     \"Jon\"". For a prefix ("starts with") match, use ^=, for example, " given_name
 //     ^= \"Jon\"".
-//     - AttributeValue: The attribute value that must be matched for each user.
+//   - AttributeValue: The attribute value that must be matched for each user.
 //
 // If the filter string is empty, ListUsers returns all users in the user pool.
 // You can only search for the following standard attributes:
-//     - username (case-sensitive)
-//     - email
-//     - phone_number
-//     - name
-//     - given_name
-//     - family_name
-//     - preferred_username
-//     - cognito:user_status (called Status in the Console) (case-insensitive)
-//     - status (called Enabled in the Console) (case-sensitive)
-//     - sub
+//   - username (case-sensitive)
+//   - email
+//   - phone_number
+//   - name
+//   - given_name
+//   - family_name
+//   - preferred_username
+//   - cognito:user_status (called Status in the Console) (case-insensitive)
+//   - status (called Enabled in the Console) (case-sensitive)
+//   - sub
 //
-// previous: An identifier that was returned from the previous call to this 
+// previous: An identifier that was returned from the previous call to this
 // operation, which can be used to return the next set of items in the list.
 //
 // Returns:
@@ -339,7 +342,7 @@ func (a awsCognito) Length(userPoolId string) (
 //   - pagination: A token to continue the list from if there are more users.
 //   - err: An error if the operation fails.
 func (a awsCognito) List(userPoolId string, limit int, filter string, previous *string) (
-	users []types.UserType, pagination *string, err error) {
+	users []UserType, pagination *string, err error) {
 	// Call the ListUsers API to retrieve the user from the user pool.
 
 	// Set the user pool ID.
