@@ -54,7 +54,7 @@ func TestCognitoListUsers(t *testing.T) {
 	// Set name of your cognito user pool here
 	var previous *string
 	for i := 0; i < 10; i++ {
-		users, p, err := a.Cognito.List(cognitoUserPool, 10, previous)
+		users, p, err := a.Cognito.List(cognitoUserPool, 10, "", previous)
 		if err != nil {
 			t.Log(err)
 			return
