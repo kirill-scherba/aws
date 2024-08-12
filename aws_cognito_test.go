@@ -1,4 +1,4 @@
-// To execute this test set POOL environment variable with name of your cognito 
+// To execute this test set POOL environment variable with name of your cognito
 // user pool id:
 //
 //   POOL=XXX go test -v -count=1 .
@@ -16,7 +16,7 @@ func init() {
 	cognitoUserPool = os.Getenv("POOL")
 }
 
-func TestCognitoDescribeUserPool(t *testing.T) {
+func TestCognitoLength(t *testing.T) {
 
 	if cognitoUserPool == "" {
 		t.Skip()
@@ -38,7 +38,7 @@ func TestCognitoDescribeUserPool(t *testing.T) {
 	t.Log("Nunber of users:", num)
 }
 
-func TestCognitoListUsers(t *testing.T) {
+func TestCognitoList(t *testing.T) {
 
 	if cognitoUserPool == "" {
 		t.Skip()
@@ -66,4 +66,33 @@ func TestCognitoListUsers(t *testing.T) {
 		}
 		t.Log()
 	}
+}
+
+func TestCognitoListFilter(t *testing.T) {
+
+	if cognitoUserPool == "" {
+		t.Skip()
+		return
+	}
+
+	a, err := New()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	var previous *string
+	var filter = "email^=\"kiri\""
+
+	users, p, err := a.Cognito.List(cognitoUserPool, 10, filter, previous)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	for _, user := range users {
+		m := a.Cognito.UserAttributes(&user)
+		t.Log(*user.Username, m["email"])
+	}
+	t.Log("pagination =", p)
+	t.Log()
 }
