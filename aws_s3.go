@@ -101,15 +101,23 @@ func (a awsS3) DeleteFolder(bucket, folderName string) (err error) {
 	return
 }
 
-// List return list of S3 objects keys in folder
-func (a awsS3) List(bucket, prefix string) (keys []string, err error) {
+// List return list of S3 objects keys in folder or returm list of prefixes if 
+// delimiter does not empty.
+func (a awsS3) List(bucket, prefix string, delimiters ...string) (keys []string, err error) {
+
+	// Set delimiter
+	var delimiter string
+	if len(delimiters) > 0 {
+		delimiter = delimiters[0]
+	}
 
 	// Get s3 object
 	listObjects, err := a.Client.ListObjects(
 		a.ctx,
 		&s3.ListObjectsInput{
-			Bucket: aws.String(bucket),
-			Prefix: aws.String(prefix),
+			Bucket:    aws.String(bucket),
+			Prefix:    aws.String(prefix),
+			Delimiter: aws.String(delimiter),
 		},
 	)
 	if err != nil {
@@ -120,7 +128,15 @@ func (a awsS3) List(bucket, prefix string) (keys []string, err error) {
 		return
 	}
 
-	// Generate output array
+	// Generate output array of prefixes
+	if delimiter != "" {
+		for _, p := range listObjects.CommonPrefixes {
+			keys = append(keys, *p.Prefix)
+		}
+		return
+	}
+
+	// Generate output array of keys
 	for _, obj := range listObjects.Contents {
 		if *obj.Key == prefix {
 			continue
