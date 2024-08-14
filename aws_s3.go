@@ -82,7 +82,7 @@ func (a awsS3) DeleteFolder(bucket, folderName string) (err error) {
 	}
 
 	// Get list objects in folder
-	keys, err := a.List(bucket, folderName, "", 0, "")
+	keys, err := a.List(bucket, folderName, 0)
 	if err != nil {
 		return
 	}
@@ -108,8 +108,14 @@ func (a awsS3) DeleteFolder(bucket, folderName string) (err error) {
 //   - bucket - S3 bucket name
 //   - prefix - limits the response to keys that begin with the specified prefix
 //   - maxKeys - maximum number of keys to return (up to 1000 by default if is 0)
+//   - attr - aditional attributes:
+//
+// The attr parameter is additional and can receive the following parameters:
 //   - marker - marker to use for pagination
 //   - delimiter - is a character you use to group keys
+//
+// The marker and delimiter is not requered parameters and added to attr
+// parameter. The marker first than delimiter.
 //
 // Marker is where you want Amazon S3 to start listing from. Amazon S3 starts
 // listing after this specified key. Marker can be any key in the bucket.
@@ -117,7 +123,17 @@ func (a awsS3) DeleteFolder(bucket, folderName string) (err error) {
 // Returns:
 //   - keys - list of S3 objects keys
 //   - err - error
-func (a awsS3) List(bucket, prefix, delimiter string, maxKeys int, marker string) (keys []string, err error) {
+func (a awsS3) List(bucket, prefix string, maxKeys int, attr ...string) (
+	keys []string, err error) {
+
+	// Get attributes: marker and delimiter
+	var marker, delimiter string
+	if len(attr) > 0 {
+		marker = attr[0]
+	}
+	if len(attr) > 1 {
+		delimiter = attr[1]
+	}
 
 	// Get s3 object
 	listObjects, err := a.Client.ListObjects(
