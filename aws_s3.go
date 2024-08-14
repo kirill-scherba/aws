@@ -82,7 +82,7 @@ func (a awsS3) DeleteFolder(bucket, folderName string) (err error) {
 	}
 
 	// Get list objects in folder
-	keys, err := a.List(bucket, folderName)
+	keys, err := a.List(bucket, folderName, 0)
 	if err != nil {
 		return
 	}
@@ -101,14 +101,38 @@ func (a awsS3) DeleteFolder(bucket, folderName string) (err error) {
 	return
 }
 
-// List return list of S3 objects keys in folder or returm list of prefixes if 
+// List return list of S3 objects keys in folder or returm list of prefixes if
 // delimiter does not empty.
-func (a awsS3) List(bucket, prefix string, delimiters ...string) (keys []string, err error) {
+//
+// Parameters:
+//   - bucket - S3 bucket name
+//   - prefix - limits the response to keys that begin with the specified prefix
+//   - maxKeys - maximum number of keys to return (up to 1000 by default if is 0)
+//   - attr - aditional attributes:
+//
+// The attr parameter is additional and can receive the following parameters:
+//   - marker - marker to use for pagination
+//   - delimiter - is a character you use to group keys
+//
+// The marker and delimiter is not requered parameters and added to attr
+// parameter. The marker first than delimiter.
+//
+// Marker is where you want Amazon S3 to start listing from. Amazon S3 starts
+// listing after this specified key. Marker can be any key in the bucket.
+//
+// Returns:
+//   - keys - list of S3 objects keys
+//   - err - error
+func (a awsS3) List(bucket, prefix string, maxKeys int, attr ...string) (
+	keys []string, err error) {
 
-	// Set delimiter
-	var delimiter string
-	if len(delimiters) > 0 {
-		delimiter = delimiters[0]
+	// Get attributes: marker and delimiter
+	var marker, delimiter string
+	if len(attr) > 0 {
+		marker = attr[0]
+	}
+	if len(attr) > 1 {
+		delimiter = attr[1]
 	}
 
 	// Get s3 object
@@ -118,6 +142,8 @@ func (a awsS3) List(bucket, prefix string, delimiters ...string) (keys []string,
 			Bucket:    aws.String(bucket),
 			Prefix:    aws.String(prefix),
 			Delimiter: aws.String(delimiter),
+			MaxKeys:   int32(maxKeys),
+			Marker:    aws.String(marker),
 		},
 	)
 	if err != nil {
