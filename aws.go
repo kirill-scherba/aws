@@ -7,12 +7,14 @@ package aws
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/smithy-go"
 )
 
 // Aws methods receiver and data structure
@@ -52,5 +54,15 @@ func New(region ...string) (a *Aws, err error) {
 	a.Cognito.ctx = ctx
 	a.Cognito.Client = cognitoidentityprovider.NewFromConfig(cfg)
 
+	return
+}
+
+// AwsError return aws error.
+// This function check if err is aws smithy.APIError and return it and true in
+// ok. If err is not aws smithy.APIError, this function return false in ok.
+func (a Aws) AwsError(err error) (awsErr smithy.APIError, ok bool) {
+	if errors.As(err, &awsErr) {
+		ok = true
+	}
 	return
 }

@@ -1,6 +1,6 @@
 module github.com/kirill-scherba/aws
 
-go 1.22.5
+go 1.23
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.18.0
@@ -8,6 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.22.10
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.31.3
+	github.com/aws/smithy-go v1.13.5
 )
 
 require (
@@ -25,6 +26,5 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.12.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.18.9 // indirect
-	github.com/aws/smithy-go v1.13.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 )

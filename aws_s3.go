@@ -3,7 +3,7 @@ package aws
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -31,8 +31,6 @@ func (a awsS3) Get(bucket, objectName string) (data []byte, err error) {
 		},
 	)
 	if err != nil {
-		err = fmt.Errorf("got an error getting s3 Object %s, error: %s",
-			objectName, err)
 		return
 	}
 
@@ -147,10 +145,6 @@ func (a awsS3) List(bucket, prefix string, maxKeys int, attr ...string) (
 		},
 	)
 	if err != nil {
-		err = fmt.Errorf(
-			"got an error getting s3 Objects list from bucket: %s, error: %s",
-			prefix, err,
-		)
 		return
 	}
 
@@ -186,10 +180,6 @@ func (a awsS3) ListChan(bucket, prefix string) (ch chan string, err error) {
 		},
 	)
 	if err != nil {
-		err = fmt.Errorf(
-			"got an error getting s3 Objects list from bucket: %s, error: %s",
-			prefix, err,
-		)
 		return
 	}
 
@@ -204,5 +194,15 @@ func (a awsS3) ListChan(bucket, prefix string) (ch chan string, err error) {
 		close(ch)
 	}()
 
+	return
+}
+
+// ResponseError return aws error.
+// This function check if err is aws s3.ResponseError and return it and true in
+// ok. If err is not aws s3.ResponseError, this function return false in ok.
+func (awsS3) ResponseError(err error) (re s3.ResponseError, ok bool) {
+	if errors.As(err, &re) {
+		ok = true
+	}
 	return
 }
