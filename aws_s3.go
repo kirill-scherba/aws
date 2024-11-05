@@ -42,6 +42,28 @@ func (a awsS3) Get(bucket, objectName string) (data []byte, err error) {
 	return
 }
 
+// Info returns metadata about an S3 object without fetching its content.
+//
+// Parameters:
+//   - bucket: The name of the S3 bucket.
+//   - objectName: The key of the S3 object.
+//
+// Returns:
+//   - result: A pointer to the HeadObjectOutput containing metadata of the S3 object.
+//   - err: An error if the operation fails.
+func (a awsS3) Info(bucket, objectName string) (result *s3.HeadObjectOutput,
+	err error) {
+
+	// Prepare the HeadObjectInput with the bucket and object key
+	headObj := s3.HeadObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(objectName),
+	}
+
+	// Call the HeadObject function to get the object's metadata
+	return a.Client.HeadObject(a.ctx, &headObj)
+}
+
 // Set save S3 object content
 func (a awsS3) Set(bucket, objectName string, data []byte) (err error) {
 
