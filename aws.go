@@ -52,6 +52,7 @@ func New(region ...string) (a *Aws, err error) {
 
 	// Create new Cognito client
 	a.Cognito.ctx = ctx
+	a.Cognito.Cache.init(&a.Cognito)
 	a.Cognito.Client = cognitoidentityprovider.NewFromConfig(cfg)
 
 	return

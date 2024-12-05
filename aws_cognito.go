@@ -2,14 +2,17 @@ package aws
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 )
 
+var ErrCognitoUserNotFound = fmt.Errorf("not found")
+
 type awsCognito struct {
+	Cache
 	ctx context.Context
 	*cognitoidentityprovider.Client
 }
@@ -35,7 +38,7 @@ func (a awsCognito) Get(userPoolId, sub string) (user *types.UserType, err error
 
 	// Check if no users were found.
 	if len(listUsers.Users) == 0 {
-		err = errors.New("not found") // Return an error if no user was found.
+		err = ErrCognitoUserNotFound // Return an error if no user was found.
 		return
 	}
 
