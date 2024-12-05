@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"log"
 	"sync"
 )
 
@@ -42,20 +41,13 @@ func (c *Cache) Get(userPoolId, sub string) (user *UserType, err error) {
 	if err != nil {
 		// Add not found user to cache
 		if err.Error() == ErrCognitoUserNotFound.Error() {
-			// c.cache[sub] = cacheData{user, err}
 			c.add(userPoolId, sub, user, err)
-			return
 		}
-
-		// Log cognito error
-		log.Println("error get cognito user by sub:", err, sub)
 		return
 	}
 
 	// Add user to cache
-	// c.cache[sub] = cacheData{user, nil}
 	c.add(userPoolId, sub, user, nil)
-
 	return
 }
 
