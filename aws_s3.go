@@ -162,7 +162,7 @@ func (a awsS3) List(bucket, prefix string, maxKeys int, attr ...string) (
 			Bucket:    aws.String(bucket),
 			Prefix:    aws.String(prefix),
 			Delimiter: aws.String(delimiter),
-			MaxKeys:   int32(maxKeys),
+			MaxKeys:   aws.Int32(int32(maxKeys)),
 			Marker:    aws.String(marker),
 		},
 	)
