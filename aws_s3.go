@@ -102,6 +102,8 @@ func (a awsS3) DeleteFolder(bucket, folderName string) (err error) {
 	}
 
 	// Get list objects in folder
+	// TODO: MaxKeys 0 - define 1000 in aws libray by default. Make loop to 
+	// delete all records 
 	keys, err := a.List(bucket, folderName, 0)
 	if err != nil {
 		return
@@ -127,7 +129,7 @@ func (a awsS3) DeleteFolder(bucket, folderName string) (err error) {
 // Parameters:
 //   - bucket - S3 bucket name
 //   - prefix - limits the response to keys that begin with the specified prefix
-//   - maxKeys - maximum number of keys to return (up to 1000 by default if is 0)
+//   - maxKeys - maximum number of keys to return (up to 1000 by default if 0)
 //   - attr - aditional attributes:
 //
 // The attr parameter is additional and can receive the following parameters:
@@ -156,13 +158,17 @@ func (a awsS3) List(bucket, prefix string, maxKeys int, attr ...string) (
 	}
 
 	// Get s3 object
+	var maxKeysPtr *int32
+	if maxKeys > 0 {
+		maxKeysPtr = aws.Int32(int32(maxKeys))
+	}
 	listObjects, err := a.Client.ListObjects(
 		a.ctx,
 		&s3.ListObjectsInput{
 			Bucket:    aws.String(bucket),
 			Prefix:    aws.String(prefix),
 			Delimiter: aws.String(delimiter),
-			MaxKeys:   aws.Int32(int32(maxKeys)),
+			MaxKeys:   maxKeysPtr,
 			Marker:    aws.String(marker),
 		},
 	)
