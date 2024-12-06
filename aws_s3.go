@@ -102,9 +102,9 @@ func (a awsS3) DeleteFolder(bucket, folderName string) (err error) {
 	}
 
 	// Get list objects in folder
-	// TODO: MaxKeys 0 - define 1000 in aws libray by default. Make loop to 
-	// delete all records 
-	keys, err := a.List(bucket, folderName, 0)
+	// TODO: MaxKeys 0 - define 1000 in aws libray by default. Make a loop to
+	// delete all records
+	keys, err := a.List(bucket, folderName)
 	if err != nil {
 		return
 	}
@@ -123,21 +123,33 @@ func (a awsS3) DeleteFolder(bucket, folderName string) (err error) {
 	return
 }
 
+// ListObjects is a struct that contains the parameters for the awsS3.List 
+// function
+type ListObjects struct {
+
+	// Sets the maximum number of keys returned in the response. By default if
+	// MaxKeys equals 0, the action returns up to 1,000 key names. The response
+	// might contain fewer keys but will never contain more.
+	MaxKeys int
+
+	// Marker is where you want Amazon S3 to start listing from. Amazon S3 starts
+	// listing after this specified key. Marker can be any key in the bucket.
+	Marker string
+
+	// A delimiter is a character that you use to group keys.
+	Delimiter string
+}
+
 // List return list of S3 objects keys in folder or returm list of prefixes if
 // delimiter does not empty.
 //
 // Parameters:
 //   - bucket - S3 bucket name
 //   - prefix - limits the response to keys that begin with the specified prefix
-//   - maxKeys - maximum number of keys to return (up to 1000 by default if 0)
-//   - attr - aditional attributes:
-//
-// The attr parameter is additional and can receive the following parameters:
-//   - marker - marker to use for pagination
-//   - delimiter - is a character you use to group keys
-//
-// The marker and delimiter is not requered parameters and added to attr
-// parameter. The marker first than delimiter.
+//   - params - additional parameters:
+//   - MaxKeys - maximum number of keys to return (default if 1000)
+//   - Marker - marker to use for pagination
+//   - Delimiter - is a character you use to group keys
 //
 // Marker is where you want Amazon S3 to start listing from. Amazon S3 starts
 // listing after this specified key. Marker can be any key in the bucket.
@@ -145,31 +157,40 @@ func (a awsS3) DeleteFolder(bucket, folderName string) (err error) {
 // Returns:
 //   - keys - list of S3 objects keys
 //   - err - error
-func (a awsS3) List(bucket, prefix string, maxKeys int, attr ...string) (
+func (a awsS3) List(bucket, prefix string, params ...ListObjects) (
 	keys []string, err error) {
 
-	// Get attributes: marker and delimiter
-	var marker, delimiter string
-	if len(attr) > 0 {
-		marker = attr[0]
-	}
-	if len(attr) > 1 {
-		delimiter = attr[1]
+	// Get parameters
+	var delimiter string
+	var maxKeysPtr *int32
+	var markerPtr, delimiterPtr *string
+	if len(params) > 0 {
+		// Get maxKeys
+		if params[0].MaxKeys > 0 {
+			maxKeysPtr = aws.Int32(int32(params[0].MaxKeys))
+		}
+
+		// Get marker
+		if params[0].Marker != "" {
+			markerPtr = aws.String(params[0].Marker)
+		}
+
+		// Get delimiter
+		if params[0].Delimiter != "" {
+			delimiterPtr = aws.String(params[0].Delimiter)
+			delimiter = params[0].Delimiter
+		}
 	}
 
 	// Get s3 object
-	var maxKeysPtr *int32
-	if maxKeys > 0 {
-		maxKeysPtr = aws.Int32(int32(maxKeys))
-	}
 	listObjects, err := a.Client.ListObjects(
 		a.ctx,
 		&s3.ListObjectsInput{
 			Bucket:    aws.String(bucket),
 			Prefix:    aws.String(prefix),
-			Delimiter: aws.String(delimiter),
+			Delimiter: delimiterPtr,
 			MaxKeys:   maxKeysPtr,
-			Marker:    aws.String(marker),
+			Marker:    markerPtr,
 		},
 	)
 	if err != nil {

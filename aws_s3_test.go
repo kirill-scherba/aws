@@ -21,7 +21,7 @@ func TestS3List(t *testing.T) {
 	}
 
 	// Get list of folders from S3
-	keys, err := a.S3.List(bucket, "dust-", 0, "", "/")
+	keys, err := a.S3.List(bucket, "dust-", ListObjects{0, "", "/"})
 	if err != nil {
 		t.Log("List error:", err)
 		return
@@ -34,14 +34,14 @@ func TestS3List(t *testing.T) {
 
 	// Get list of keys from folder, by 3 keys
 	var list []string
-	const maxKey = 3
+	const maxKeys = 3
 	var lastKey string
 	var prefix = keys[0] + "players/"
-	t.Log("Get list of keys from folder", keys[0], "by", maxKey, "keys")
+	t.Log("Get list of keys from folder", keys[0], "by", maxKeys, "keys")
 	for {
 		t.Log("list after lastKey:", lastKey)
 
-		keys, err = a.S3.List(bucket, prefix, maxKey, lastKey)
+		keys, err = a.S3.List(bucket, prefix, ListObjects{MaxKeys: maxKeys, Marker: lastKey})
 		if err != nil {
 			t.Log("List error:", err)
 			return
