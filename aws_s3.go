@@ -123,7 +123,7 @@ func (a awsS3) DeleteFolder(bucket, folderName string) (err error) {
 	return
 }
 
-// ListObjects is a struct that contains the parameters for the awsS3.List 
+// ListObjects is a struct that contains the parameters for the awsS3.List
 // function
 type ListObjects struct {
 
@@ -160,29 +160,77 @@ type ListObjects struct {
 func (a awsS3) List(bucket, prefix string, params ...ListObjects) (
 	keys []string, err error) {
 
-	// Get parameters
+	keys, _, err = a.list(bucket, prefix, params...)
+	return
+}
+
+// ListTags return list of S3 objects keys and tags in folder.
+//
+// Parameters:
+//   - bucket - S3 bucket name
+//   - prefix - limits the response to keys that begin with the specified prefix
+//   - params - additional parameters:
+//   - MaxKeys - maximum number of keys to return (default if 1000)
+//   - Marker - marker to use for pagination
+//   - Delimiter - is a character you use to group keys
+//
+// Marker is where you want Amazon S3 to start listing from. Amazon S3 starts
+// listing after this specified key. Marker can be any key in the bucket.
+//
+// Returns:
+//   - keys - list of S3 objects keys
+//   - tags - list of S3 objects tags (unique key of saves)
+//   - err - error
+func (a awsS3) ListTags(bucket, prefix string, params ...ListObjects) (
+	keys []string, tags []string, err error) {
+
+	return a.list(bucket, prefix, params...)
+}
+
+// list returns list of S3 objects keys in folder or returm list of prefixes if
+// delimiter does not empty.
+//
+// Parameters:
+//   - bucket - S3 bucket name
+//   - prefix - limits the response to keys that begin with the specified prefix
+//   - params - additional parameters:
+//   - MaxKeys - maximum number of keys to return (default if 1000)
+//   - Marker - marker to use for pagination
+//   - Delimiter - is a character you use to group keys
+//
+// Marker is where you want Amazon S3 to start listing from. Amazon S3 starts
+// listing after this specified key. Marker can be any key in the bucket.
+//
+// Returns:
+//   - keys - list of S3 objects keys
+//   - tags - list of S3 objects tags (unique key of saves)
+//   - err - error
+func (a awsS3) list(bucket, prefix string, params ...ListObjects) (
+	keys []string, tags []string, err error) {
+
+	// Set default values for parameters
 	var delimiter string
 	var maxKeysPtr *int32
 	var markerPtr, delimiterPtr *string
 	if len(params) > 0 {
-		// Get maxKeys
+		// Set maxKeys
 		if params[0].MaxKeys > 0 {
 			maxKeysPtr = aws.Int32(int32(params[0].MaxKeys))
 		}
 
-		// Get marker
+		// Set marker
 		if params[0].Marker != "" {
 			markerPtr = aws.String(params[0].Marker)
 		}
 
-		// Get delimiter
+		// Set delimiter
 		if params[0].Delimiter != "" {
 			delimiterPtr = aws.String(params[0].Delimiter)
 			delimiter = params[0].Delimiter
 		}
 	}
 
-	// Get s3 object
+	// Get list of S3 objects
 	listObjects, err := a.Client.ListObjects(
 		a.ctx,
 		&s3.ListObjectsInput{
@@ -211,6 +259,19 @@ func (a awsS3) List(bucket, prefix string, params ...ListObjects) (
 			continue
 		}
 		keys = append(keys, *obj.Key)
+	}
+
+	// Generate output array of times
+	for _, obj := range listObjects.Contents {
+		if *obj.Key == prefix {
+			continue
+		}
+		// t, _ := time.Parse(time.RFC3339, *obj.LastModified)
+		tag := ""
+		if obj.ETag != nil {
+			tag = *obj.ETag
+		}
+		tags = append(tags, tag)
 	}
 
 	return
